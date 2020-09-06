@@ -67,7 +67,7 @@ export default class WebGLView {
 		};
 
 		this.pane = new Tweakpane();
-
+		this.pane.containerElem_.style.display = 'none';
 	}
 
 	setupTextCanvas() {
