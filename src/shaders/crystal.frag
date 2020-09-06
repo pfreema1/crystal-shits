@@ -47,8 +47,10 @@ void main() {
     color = mix(refractColor, chromAberrColor, edgesColor.r);
 
     // mix in the edges color white
-    color = mix(color, edgesColor, edgesColor.r / edgesRenderStrength);
+    // color = mix(color, edgesColor, edgesColor.r * edgesRenderStrength);
+    color = mix(color, vec4(0.09, 0.09, 0.19, 1.0), edgesColor.r * edgesRenderStrength);
 
+    // color = edgesColor;
 
     gl_FragColor = vec4(color);
 }

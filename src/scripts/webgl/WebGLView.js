@@ -15,6 +15,7 @@ import Tweakpane from 'tweakpane';
 import crystalFrag from '../../shaders/crystal.frag';
 import crystalVert from '../../shaders/crystal.vert';
 import particlesBlurFrag from '../../shaders/particlesBlur.frag';
+import TextCanvas from './TextCanvas';
 
 function remap(t, old_min, old_max, new_min, new_max) {
 	let old_range = old_max - old_min;
@@ -33,17 +34,8 @@ export default class WebGLView {
 	}
 
 	async init() {
-		this.PARAMS = {
-			edgesThickness: 3.26,
-			edgesRenderStrength: 15,
-			chromaticAberrMod: 0.22,
-			pointLightColor: '#fff0ff',
-			pointLightIntensity: 1,
-			pointLightDistance: 500,
-			pointLightDecay: 1
-		};
 
-		// this.pane = new Tweakpane();
+		this.initTweakPane();
 		this.initThree();
 		this.initParticlesRenderTarget();
 		this.initObjects();
@@ -51,6 +43,7 @@ export default class WebGLView {
 		this.initControls();
 		// this.initPostProcessing();
 		this.mainCrystal = new Crystal(this.PARAMS);
+		this.setupTextCanvas();
 		// this.addPaneParams();
 		this.initMouseListener();
 
@@ -59,6 +52,27 @@ export default class WebGLView {
 		this.initParticlesBlurTri();
 		this.initCrystalRenderTri();
 
+
+	}
+
+	initTweakPane() {
+		this.PARAMS = {
+			edgesThickness: 3.2,
+			edgesRenderStrength: 0.2,
+			chromaticAberrMod: 0.22,
+			pointLightColor: '#fff0ff',
+			pointLightIntensity: 1,
+			pointLightDistance: 500,
+			pointLightDecay: 1
+		};
+
+		this.pane = new Tweakpane();
+
+	}
+
+	setupTextCanvas() {
+		this.textCanvas = new TextCanvas(this);
+		console.log(this.textCanvas);
 	}
 
 	initMouseListener() {
@@ -73,7 +87,7 @@ export default class WebGLView {
 		this.resolution = new THREE.Vector2();
 		this.renderer.getDrawingBufferSize(this.resolution);
 		let uniforms = {
-			bgTexture: { value: this.particlesRt.texture },
+			bgTexture: { value: this.textCanvas.texture },
 			uResolution: { value: this.resolution },
 		};
 
@@ -103,7 +117,7 @@ export default class WebGLView {
 			},
 			blurBgTexture: {
 				type: 't',
-				value: this.particlesBlurTri.rt.texture
+				value: this.textCanvas.texture//this.particlesBlurTri.rt.texture
 			},
 			normalsTexture: {
 				type: 't',
@@ -317,9 +331,19 @@ export default class WebGLView {
 		if (this.trackball) this.trackball.handleResize();
 	}
 
+	updateTextCanvas(time) {
+		this.textCanvas.textLine.update(time);
+		this.textCanvas.textLine.draw(time);
+		this.textCanvas.texture.needsUpdate = true;
+	}
+
 	update() {
 		const delta = this.clock.getDelta();
 		const time = performance.now() * 0.0005;
+
+		if (this.textCanvas) {
+			this.updateTextCanvas(time);
+		}
 
 		if (this.triMaterial) {
 			this.triMaterial.uniforms.uTime.value = time;
@@ -333,15 +357,19 @@ export default class WebGLView {
 	}
 
 	draw() {
-		console.log(this.mouse.y);
 		if (this.mainCrystal) {
 			// rotate crystals
-			this.mainCrystal.meshes.edges.rotation.y += this.mouse.y * 0.009;
-			this.mainCrystal.meshes.edges.rotation.z += this.mouse.x * 0.009;
-			this.mainCrystal.meshes.edges.rotation.x += 0.005;
-			this.mainCrystal.meshes.normals.rotation.y += this.mouse.y * 0.009;
-			this.mainCrystal.meshes.normals.rotation.z += this.mouse.x * 0.009;
-			this.mainCrystal.meshes.normals.rotation.x += 0.005;
+			// this.mainCrystal.meshes.edges.rotation.y += this.mouse.y * 0.009;
+			// this.mainCrystal.meshes.edges.rotation.z += this.mouse.x * 0.009;
+			// this.mainCrystal.meshes.edges.rotation.x += 0.005;
+			// this.mainCrystal.meshes.normals.rotation.y += this.mouse.y * 0.009;
+			// this.mainCrystal.meshes.normals.rotation.z += this.mouse.x * 0.009;
+			// this.mainCrystal.meshes.normals.rotation.x += 0.005;
+			this.mainCrystal.meshes.edges.rotation.y = this.mouse.x * 0.5;
+			this.mainCrystal.meshes.normals.rotation.y = this.mouse.x * 0.5;
+
+			this.mainCrystal.meshes.edges.rotation.x = this.mouse.y * 0.5;
+			this.mainCrystal.meshes.normals.rotation.x = this.mouse.y * 0.5;
 
 
 			// render bg particles

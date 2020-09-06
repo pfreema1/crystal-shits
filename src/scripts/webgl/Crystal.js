@@ -23,10 +23,28 @@ export default class Crystal {
 
         this.scenes.edges.add(this.meshes.edges);
         this.scenes.normals.add(this.meshes.normals);
+
+
+    }
+
+    perturbGeo(edgesGeo) {
+        let posArr = edgesGeo.attributes.position.array;
+
+        for (let i = 0; i < posArr.length; i += 1) {
+            posArr[i] += THREE.Math.mapLinear(Math.random(), 0, 1, -1.5, 1.5);
+        }
+
+        edgesGeo.computeVertexNormals();
+
     }
 
     createMeshes() {
-        let edgesGeo = new THREE.TetrahedronBufferGeometry(10, 2);
+        let edgesGeo = new THREE.PlaneBufferGeometry(15, 10, 4, 4);
+        console.log('edgesGeo:  ', edgesGeo);
+        this.perturbGeo(edgesGeo);
+        // edgesGeo.needsUpdate = true;
+        // edgesGeo.attributes.needsUpdate = true;
+
         let normalsGeo = edgesGeo.clone();
         let edgesMat = this.returnEdgesMaterial();
         let normalsMat = this.returnNormalsMaterial();
@@ -44,6 +62,9 @@ export default class Crystal {
             edges: new THREE.Mesh(edgesGeo, edgesMat),
             normals: new THREE.Mesh(normalsGeo, normalsMat)
         };
+
+        this.meshes.edges.position.z += 8;
+        this.meshes.normals.position.z += 8;
     }
 
     returnBarycentricData(vertices) {
@@ -67,7 +88,8 @@ export default class Crystal {
         return new THREE.ShaderMaterial({
             uniforms: {},
             vertexShader: glslify(crystalNormalsVert),
-            fragmentShader: glslify(crystalNormalsFrag)
+            fragmentShader: glslify(crystalNormalsFrag),
+            side: THREE.DoubleSide
         });
     }
 
@@ -80,7 +102,8 @@ export default class Crystal {
                 }
             },
             vertexShader: glslify(crystalEdgesVert),
-            fragmentShader: glslify(crystalEdgesFrag)
+            fragmentShader: glslify(crystalEdgesFrag),
+            side: THREE.DoubleSide
         });
     }
 
